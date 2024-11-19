@@ -1,0 +1,53 @@
+# Ignore IDE and editor configuration files and directories
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Ignore operating system files
+.DS_Store
+Thumbs.db
+
+# Ignore node_modules and dependencies directories
+fimarket/node_modules
+fimarket-back/node_modules
+
+# Ignore log and runtime files
+fimarket/npm-debug.log
+fimarket/yarn-debug.log
+fimarket/yarn-error.log
+fimarket-back/npm-debug.log
+fimarket-back/yarn-debug.log
+fimarket-back/yarn-error.log
+
+# Ignore build directories
+fimarket/build
+fimarket/dist
+fimarket-back/build
+fimarket-back/dist
+
+# Ignore any test-related files and directories
+fimarket/test
+fimarket/tests
+fimarket/__tests__
+fimarket-back/test
+fimarket-back/tests
+fimarket-back/__tests__
+
+# Ignore environment files
+fimarket/.env
+fimarket-back/.env
+
+# Ignore data directories
+fimarket/opt/mongodb_data
+
+# Ignore temporary files and directories
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Ignore Docker Compose file to avoid build loop issues
+docker-compose.yml
+Dockerfile*
+venv/

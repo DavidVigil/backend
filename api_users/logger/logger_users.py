@@ -9,7 +9,7 @@ class Logger:
             # aquí mandamos a imprimir en que archivo y linea ocurrió el error
             format='%(asctime)s: %(levelname)s [%(filename)s:%(lineno)s] %(message)s',
             # formato gringo
-            datefmt='%I:%M:%S %p'?
+            datefmt='%I:%M:%S %p',
             handlers=[
                 log.FileHandler(log_file),
                 log.StreamHandler()

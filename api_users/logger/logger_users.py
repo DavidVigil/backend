@@ -4,12 +4,8 @@ class Logger:
     def __init__(self, log_file='api_users.log', level=log.INFO):
         log.basicConfig(
             level=level,
-            # ordenado por fecha y hora, nivel de error, nombre del archivo y linea de código
-            # para buenas prácticas
-            # aquí mandamos a imprimir en que archivo y linea ocurrió el error
             format='%(asctime)s: %(levelname)s [%(filename)s:%(lineno)s] %(message)s',
-            # formato gringo
-            datefmt='%I:%M:%S %p'?
+            datefmt='%I:%M:%S %p',
             handlers=[
                 log.FileHandler(log_file),
                 log.StreamHandler()

@@ -11,10 +11,14 @@ class AppsRoutes(Blueprint):
         self.logger = Logger()
 
     def register_routes(self):
-        self.route('/apps/v1/apps', methods=['GET'])(self.get_apps)
+        self.route('/apps/v2/apps', methods=['GET'])(self.get_apps)
+        self.route('/api/v2/new/app', methods=['POST'])(self.add_app)
+        self.route('/api/v2/apps/<int:app_id>', methods=['PUT'])(self.update_app)
+        self.route('/api/v2/apps/delete/<int:app_id>', methods=['DELETE'])(self.delete_app)
+        self.route('/healthcheck', methods=['GET'])(self.healthcheck)
 
     def get_apps(self):
-        apps = self.apps_service.get_all_users()
+        apps = self.app_service.get_all_users()
         return jsonify(apps), 200
 
     def add_app(self):
@@ -81,7 +85,7 @@ class AppsRoutes(Blueprint):
             except ValidationError as e:
                 return jsonify({'error': f'Invalid data: {e}'})
 
-            update_book = {
+            update_app = {
                 '_id': app_id,
                 'info' : info,
                 'description' : description,
@@ -89,9 +93,9 @@ class AppsRoutes(Blueprint):
                 'url' : url,
                 'source' : source
             }
-            updated_app = self.app_service.update_book(app_id, updated_app)
+            updated_app = self.app_service.update_app(app_id, update_app)
             if updated_app:
-                return jsonify(updated_app), 200
+                return jsonify(update_app), 200
             else:
                 return jsonify({'error': 'App not found'}), 404
 

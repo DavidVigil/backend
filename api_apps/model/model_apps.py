@@ -2,7 +2,7 @@ import os
 from logger.logger_apps import Logger
 from pymongo import MongoClient
 
-class BookModel:  # Create the class
+class AppModel:  # Create the class
     def __init__(self):  # Define the constructor
         self.client = None
         self.db = None
@@ -40,7 +40,7 @@ class BookModel:  # Create the class
             self.client.close()
 
 if __name__ == '__main__':
-    db_conn = BookModel()
+    db_conn = AppModel()
 
     try: 
         db_conn.connect_to_database()
@@ -49,3 +49,5 @@ if __name__ == '__main__':
     finally: 
         db_conn.close_connection()
         db_conn.logger.info('Connection to the database was successfully closed')
+        
+        

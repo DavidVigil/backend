@@ -21,7 +21,7 @@ if __name__ == '__main__':
     user_service = UserService(db_conn)
     try:
         db_conn.connect_to_database()
-        users = users_service.get_all_users()
+        users = user_service.get_all_users()
         logger.info(f'Users fetched: {users}')
     except Exception as e:
         logger.error(f'Error fetching all users: {e}')

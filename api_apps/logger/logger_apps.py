@@ -1,32 +1,32 @@
 import logging as log
 
 class Logger:
-    def __init__(self, log_file='api_apps.log', level=log.INFO): #
-        log.basicConfig( # 
-            level=level, #Nivel de loggeo
+    def __init__(self, log_file='api_apps.log', level=log.INFO):
+        log.basicConfig(
+            level=level,
             format='%(asctime)s:%(levelname)s [%(filename)s:%(lineno)s] %(message)s', 
             datefmt='%I:%M:%S %p', 
             handlers=[ 
-                log.FileHandler(log_file), # comma added
+                log.FileHandler(log_file),
                 log.StreamHandler() 
             ]
         )
-        self.logger = log
+        self.logger = log.getLogger()
 
     def debug(self, message):
-        self.logger.debug(message)
+        self.logger.debug(message, stacklevel=2)
 
-    def info(self, message): # into -> info
-        self.logger.info(message)
+    def info(self, message):
+        self.logger.info(message, stacklevel=2)
 
     def warning(self, message):
-        self.logger.warning(message)
+        self.logger.warning(message, stacklevel=2)
 
     def error(self, message):
-        self.logger.error(message)
+        self.logger.error(message, stacklevel=2)
 
     def critical(self, message):
-        self.logger.critical(message)
+        self.logger.critical(message, stacklevel=2)
 
 if __name__=='__main__': 
     logger = Logger()

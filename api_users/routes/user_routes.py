@@ -13,6 +13,7 @@ class UserRoutes(Blueprint):
 
     def register_routes(self):
         self.route('/api/v1/users', methods=['GET'])(self.get_users)
+        self.route('/api/v1/users/login', methods=['GET'])(self.get_login_user)
         self.route('/api/v1/users', methods=['POST'])(self.add_user)
         self.route('/api/v1/users/<int:user_id>', methods=['PUT'])(self.update_user)
         self.route('/api/v1/users/<int:user_id>', methods=['DELETE'])(self.delete_user)
@@ -37,6 +38,68 @@ class UserRoutes(Blueprint):
         except Exception as e:
             self.logger.error(f'Error fetching users: {e}')
             return jsonify({'error': f'Error fetching users: {e}'}), 500
+
+    @swag_from({
+        'tags': ['Users'],
+        'parameters': [
+            {
+                'name': 'body',
+                'in': 'body',
+                'required': True,
+                'schema': {
+                    'type': 'object',
+                    'properties': {
+                        'email': {'type': 'string'},
+                        'password': {'type': 'string'}
+                    },
+                    'required': ['email', 'password']
+                }
+            }
+        ],
+        'responses': {
+            200: {
+                'description': 'User successfully retrieved'
+            },
+            400: {
+                'description': 'Invalid data or user does not exist'
+            },
+            500: {
+                'description': 'Internal server error'
+            }
+        }
+    })
+    def get_login_user(self):
+        try:
+            email = request.args.get('email')
+            password = request.args.get('password')
+
+            if not email or not password:
+                return jsonify({'error': 'Invalid data or empty'}), 404
+
+            # Validación de email y contraseña
+            try:
+                self.user_schema.validate_email(email)
+            except ValidationError as e:
+                return jsonify({'error': f'Validation failed: {e}'}), 401
+
+            try:
+                self.user_schema.validate_password(password)
+            except ValidationError as e:
+                return jsonify({'error': f'Validation failed: {e}'}), 402
+
+            user_exists = self.user_service.check_user_exists(email)
+            if user_exists:
+                user = self.user_service.get_user_by_email(email, password)
+                if (len(user) > 1):
+                    return user
+                else:
+                    user[1] = ""
+                    return jsonify(user), 200
+            else:
+                return jsonify({'error': 'User does not exist'}), 404
+        except Exception as e:
+            self.logger.error(f'Error fetching user: {e}')
+            return jsonify({'error': f'Error fetching user: {e}'}), 500
 
     @swag_from({
         'tags': ['Users'],
@@ -234,7 +297,6 @@ class UserRoutes(Blueprint):
         except Exception as e:
             self.logger.error(f'Error fetching user by ID: {e}')
             return jsonify({'error': f'Error fetching user by ID: {e}'}), 500
-
 
     def healthcheck(self):
         return jsonify({'status': 'up'}), 200

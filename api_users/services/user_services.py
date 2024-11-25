@@ -14,6 +14,19 @@ class UserService:
             self.logger.error(f'Error fetching all users from the database: {e}')
             return jsonify({'error': f'Error fetching all users from the database: {e}'}), 500
 
+    def get_user_by_email(self, email, password):
+        try:
+            user = list(self.db_conn.db.users.find({'email': email, 'password': password}))
+            if len(user) > 0:
+                return user[0]
+            return (
+                jsonify({"error": f"Error fetching the user email from the database"}),
+                403,
+            )
+        except Exception as e:
+            self.logger.error(f'Error fetching the user email from the database: {e}')
+            return jsonify({'error': f'Error fetching the user email from the database, {e}'}), 505
+
     def check_user_exists(self, email):
         try:
             # Search for a user with the provided email
@@ -28,12 +41,12 @@ class UserService:
             # Check if the user already exists
             if self.check_user_exists(new_user['email']):
                 return jsonify({'error': 'User already exists'}), 400
-            
+
             # Find the last _id and increment
             last_user = self.db_conn.db.users.find_one(sort=[('_id', -1)])
             next_id = (last_user['_id'] + 1) if last_user else 1
             new_user['_id'] = next_id
-            
+
             # Insert the new user
             self.db_conn.db.users.insert_one(new_user)
             return new_user

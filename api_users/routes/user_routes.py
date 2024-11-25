@@ -134,7 +134,7 @@ class UserRoutes(Blueprint):
         try:
             request_data = request.json
             if not request_data:
-                return jsonify({'error': 'Invalid data, empty'}), 400
+                return jsonify({'error': 'Invalid data, empty'}), 401
 
             email = request_data.get('email')
             password = request_data.get('password')
@@ -143,11 +143,11 @@ class UserRoutes(Blueprint):
                 self.user_schema.validate_email(email)
                 self.user_schema.validate_password(password)
             except ValidationError as e:
-                return jsonify({'error': f'Validation failed: {e}'}), 400
+                return jsonify({'error': f'Validation failed: {e}'}), 402
 
             user_exists = self.user_service.check_user_exists(email)
             if user_exists:
-                return jsonify({'error': 'User already exists'}), 400
+                return jsonify({'error': 'User already exists'}), 403
 
             new_user = {
                 'email': email,
@@ -158,7 +158,7 @@ class UserRoutes(Blueprint):
             return jsonify(created_user), 201
         except Exception as e:
             self.logger.error(f'Error creating user: {e}')
-            return jsonify({'error': f'Error creating user: {e}'}), 500
+            return jsonify({'error': f'Error creating user: {e}'}), 501
 
     @swag_from({
         'tags': ['Users'],
@@ -199,7 +199,7 @@ class UserRoutes(Blueprint):
         try:
             request_data = request.json
             if not request_data:
-                return jsonify({'error': 'Invalid data, empty'}), 400
+                return jsonify({'error': 'Invalid data, empty'}), 401
 
             email = request_data.get('email')
             password = request_data.get('password')
@@ -208,13 +208,13 @@ class UserRoutes(Blueprint):
                 try:
                     self.user_schema.validate_email(email)
                 except ValidationError as e:
-                    return jsonify({'error': f'Validation failed: {e}'}), 400
+                    return jsonify({'error': f'Validation failed: {e}'}), 402
 
             if password:
                 try:
                     self.user_schema.validate_password(password)
                 except ValidationError as e:
-                    return jsonify({'error': f'Validation failed: {e}'}), 400
+                    return jsonify({'error': f'Validation failed: {e}'}), 403
 
             updated_user = {k: v for k, v in request_data.items() if v is not None}
 

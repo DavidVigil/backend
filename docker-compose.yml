@@ -1,62 +1,80 @@
 services:
-  app:
+  front:
+    image_name: fi-front
     container_name: frontend
+    depends_on: 
+      - back-apps
+      - back-user
+      - database
+    context: ../frontend-project/fimarket/
     build:
-      dockerfile: Dockerfile-front
+      dockerfile: Dockerfile
     restart: always
     ports:
       - "3000:3000"
     environment:
       NODE_ENV: production
       PORT: 3000
-    volumes:
-      - .:/app
     healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:3000"]
+      test: ["CMD", "curl", "--fail", "http://front:3000"]
       interval: 30s
       timeout: 30s
       retries: 3
       start_period: 5s
     user: "fimarket"
-  back:
-    container_name: backend
+  back-apps:
+    image_name: fi-back-apps
+    container_name: back-apps
+    depends_on: database
+    context: ./api_apps/
     build:
-      dockerfile: Dockerfile-back
+      dockerfile: Dockerfile
     restart: always
     ports:
-      - "5000:5000"
+      - "8000:8000"
     environment:
       FLASK_APP: app.py 
       FLASK_ENV: production 
-      MONGODB_USER: fimarket 
-      MONGODB_PASS: awesomefimarketpass123
+      MONGODB_USER: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGODB_PASS: ${MONGO_INITDB_ROOT_PASSWORD}
       MONGODB_HOST: database
-    volumes:
-      - .:/app
+      port: 8000
     healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:5000"]
+      test: ["CMD", "curl", "--fail", "http://back-apps:8000/healthcheck"]
       interval: 30s
       timeout: 30s
       retries: 3
-      start_period: 5s
-  database:
-    container_name: database
+      start_period: 5
+  back-user:
+    image_name: fi-back-user
+    container_name: back-user
+    depends_on: database
+    context: ./api_user/
     build:
-      dockerfile: Dockerfile-mongo
+      dockerfile: Dockerfile
     restart: always
-    ports: 
-      - "27017:27017" 
-    environment: 
-      MONGO_INITDB_ROOT_USERNAME: fimarket
-      MONGO_INITDB_ROOT_PASSWORD: awesomefimarketpass123
+    ports:
+      - "8001:8001"
+    environment:
+      FLASK_APP: app.py 
+      FLASK_ENV: production 
+      MONGODB_USER: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGODB_PASS: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGODB_HOST: database
+      port: 8001
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://back-user:8001/healthcheck"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 5
+  database:
+    image: mongo:4.0.0
+    image_name: fi-mongo
+    container_name: mongodb
     volumes:
-      - ./opt/mongodb_data:/data/db
-    healthcheck: 
-      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"] 
-      interval: 30s 
-      timeout: 10s 
-      retries: 3 
-      start_period: 5s
-
-volumes:
-  mongodb_data:
+      - /opt/mongodb/data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+  

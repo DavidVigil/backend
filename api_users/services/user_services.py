@@ -36,6 +36,43 @@ class UserService:
             self.logger.error(f'Error checking if user exists: {e}')
             raise
 
+    def get_liked_apps(self, user_id):
+        try:
+            # Check if the user exists
+            user = self.get_user_by_id(user_id)
+            if not user:
+                return jsonify({'error': 'User not found'}), 404
+
+            # Get the liked apps
+            liked_apps = user.get('likedApps', [])
+            return liked_apps
+        except Exception as e:
+            self.logger.error(f'Error fetching the liked apps: {e}')
+            return jsonify({'error': f'Error fetching the liked apps: {e}'}), 500
+
+    def like_app(self, user_id, app_id):
+        try:
+            # Check if the user exists
+            user = self.get_user_by_id(user_id)
+            if not user:
+                return jsonify({'error': 'User not found'}), 404
+
+            # Check if the app is already liked
+            user['likedApps'] = user.get('likedApps', [])
+            if app_id in user['likedApps']:
+                return jsonify({"warning": "User already saved that app"}), 505
+
+            # Add the app to the likedApps list
+            user['likedApps'].append(app_id)
+            result = self.db_conn.db.users.update_one({'_id': user_id}, {'$set': user})
+            if result.modified_count > 0:
+                return user
+            else:
+                return jsonify({"warning": "User already saved that app"}), 501
+        except Exception as e:
+            self.logger.error(f'Error liking the app: {e}')
+            return jsonify({'error': f'Error liking the app: {e}'}), 502
+
     def add_user(self, new_user):
         try:
             # Check if the user already exists
@@ -46,6 +83,7 @@ class UserService:
             last_user = self.db_conn.db.users.find_one(sort=[('_id', -1)])
             next_id = (last_user['_id'] + 1) if last_user else 1
             new_user['_id'] = next_id
+            new_user['likedApps'] = [0]
 
             # Insert the new user
             self.db_conn.db.users.insert_one(new_user)
@@ -56,7 +94,7 @@ class UserService:
 
     def get_user_by_id(self, user_id):
         try:
-            user = self.db_conn.db.users.find_one({'_id': user_id}, {'password': 0})  # Exclude passwords
+            user = self.db_conn.db.users.find_one({'_id': user_id})  # Exclude passwords
             return user
         except Exception as e:
             self.logger.error(f'Error fetching the user id from the database: {e}')

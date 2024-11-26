@@ -88,7 +88,7 @@ class AppRoutes(Blueprint):
                 # Validate the input schema using Marshmallow
                 self.app_schema.load(request_data)
             except ValidationError as e:
-                return jsonify({'error': f'Validation failed: {e.messages}'}), 402
+                return jsonify({'error': f'Validation failed: {e.messages}'}), 400
 
             # Call the service to add the app
             service_response = self.app_service.add_app(request_data)

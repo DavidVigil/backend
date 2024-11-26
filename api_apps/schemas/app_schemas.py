@@ -9,7 +9,7 @@ class AppSchema(Schema):
     url = fields.String(required=True)  # URL is mandatory
     logo_url = fields.String(required=True)  # Logo URL is mandatory
     origin = fields.String(required=True)  # Origin is mandatory
-    author = fields.String()  # Author is optional
+    author = fields.String(required=True)  # Author is mandalorian, is the _id of the user
 
     @validates('name')
     def validate_name(self, value):

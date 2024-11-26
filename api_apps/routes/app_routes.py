@@ -57,7 +57,9 @@ class AppRoutes(Blueprint):
                         'info': {'type': 'string'},
                         'description': {'type': 'string'},
                         'url': {'type': 'string'},
-                        'logo_url': {'type': 'string'}
+                        'logo_url': {'type': 'string'},
+                        'origin': {'type': 'string'},
+                        'author': {'type': 'string'}
                     },
                     'required': ['name', 'url']  # Mandatory fields
                 }
@@ -80,13 +82,13 @@ class AppRoutes(Blueprint):
             # Parse and validate the request body
             request_data = request.json
             if not request_data:
-                return jsonify({'error': 'Invalid data, empty'}), 400
+                return jsonify({'error': 'Invalid data, empty'}), 401
 
             try:
                 # Validate the input schema using Marshmallow
                 self.app_schema.load(request_data)
             except ValidationError as e:
-                return jsonify({'error': f'Validation failed: {e.messages}'}), 400
+                return jsonify({'error': f'Validation failed: {e.messages}'}), 402
 
             # Call the service to add the app
             service_response = self.app_service.add_app(request_data)
@@ -125,7 +127,9 @@ class AppRoutes(Blueprint):
                         'info': {'type': 'string'},
                         'description': {'type': 'string'},
                         'url': {'type': 'string'},
-                        'logo_url': {'type': 'string'}
+                        'logo_url': {'type': 'string'},
+                        'origin': {'type': 'string'},
+                        'author': {'type': 'string'}
                     }
                 }
             }
@@ -146,22 +150,22 @@ class AppRoutes(Blueprint):
         try:
             request_data = request.json
             if not request_data:
-                return jsonify({'error': 'Invalid data, empty'}), 400
+                return jsonify({'error': 'Invalid data, empty'}), 403
 
             try:
                 # Validate only the fields provided in the request (partial update)
                 self.app_schema.load(request_data, partial=True)
             except ValidationError as e:
-                return jsonify({'error': f'Validation failed: {e.messages}'}), 400
+                return jsonify({'error': f'Validation failed: {e.messages}'}), 405
 
             updated_app = self.app_service.update_app(app_id, request_data)
             if updated_app is None:
-                return jsonify({'error': 'App not found'}), 400
+                return jsonify({'error': 'App not found'}), 404
 
-            return jsonify({'message': 'App successfully updated', 'app': updated_app}), 200
+            return jsonify({'message': 'App successfully updated', 'app': updated_app}), 201
         except Exception as e:
             self.logger.error(f'Error updating app: {e}')
-            return jsonify({'error': f'Error updating app: {e}'}), 500
+            return jsonify({'error': f'Error updating app: {e}'}), 501
 
 
     @swag_from({
@@ -192,12 +196,12 @@ class AppRoutes(Blueprint):
             # Delete the app using the service
             result = self.app_service.delete_app(app_id)
             if result is None:
-                return jsonify({'error': 'App not found'}), 400
+                return jsonify({'error': 'App not found'}), 404
 
-            return jsonify({'message': 'App successfully deleted', 'app': result}), 200
+            return jsonify({'message': 'App successfully deleted', 'app': result}), 202
         except Exception as e:
             self.logger.error(f'Error deleting app: {e}')
-            return jsonify({'error': f'Error deleting app: {e}'}), 500
+            return jsonify({'error': f'Error deleting app: {e}'}), 505
 
     @swag_from({
         'tags': ['Apps'],
@@ -227,12 +231,12 @@ class AppRoutes(Blueprint):
             # Fetch the app by ID using the service
             app = self.app_service.get_app_by_id(app_id)
             if app is None:
-                return jsonify({'error': 'App not found'}), 400
+                return jsonify({'error': 'App not found'}), 404
 
             return jsonify(app), 200
         except Exception as e:
             self.logger.error(f'Error fetching app by ID: {e}')
-            return jsonify({'error': f'Error fetching app by ID: {e}'}), 500
+            return jsonify({'error': f'Error fetching app by ID: {e}'}), 506
 
     @swag_from({
         'tags': ['Apps'],
@@ -262,12 +266,12 @@ class AppRoutes(Blueprint):
             # Fetch the app by name using the service
             app = self.app_service.get_app_by_name(name)
             if app is None:
-                return jsonify({'error': 'App not found'}), 400
+                return jsonify({'error': 'App not found'}), 404
 
             return jsonify(app), 200
         except Exception as e:
             self.logger.error(f'Error fetching app by name: {e}')
-            return jsonify({'error': f'Error fetching app by name: {e}'}), 500
+            return jsonify({'error': f'Error fetching app by name: {e}'}), 507
 
     def healthcheck(self):
         # Healthcheck endpoint to verify service is running

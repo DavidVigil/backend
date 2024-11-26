@@ -19,6 +19,6 @@ app.register_blueprint(user_routes)
 
 if __name__ == '__main__':
     try:
-        app.run(debug=True)
+        app.run(port=8000, debug=True)
     finally:
         db_conn.close_connection()

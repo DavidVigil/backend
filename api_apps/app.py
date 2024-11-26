@@ -28,6 +28,6 @@ app.register_blueprint(app_routes)
 # Entry point for running the Flask application
 if __name__ == '__main__':
     try:
-        app.run(debug=True)  # Run the app in debug mode for development
+        app.run(port=8001, debug=True)  # Run the app in debug mode for development
     finally:
         db_conn.close_connection()  # Ensure the database connection is closed properly

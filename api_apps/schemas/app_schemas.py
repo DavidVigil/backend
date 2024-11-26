@@ -8,6 +8,8 @@ class AppSchema(Schema):
     description = fields.String(required=True)  # Description is mandatory
     url = fields.String(required=True)  # URL is mandatory
     logo_url = fields.String(required=True)  # Logo URL is mandatory
+    origin = fields.String(required=True)  # Origin is mandatory
+    author = fields.String()  # Author is optional
 
     @validates('name')
     def validate_name(self, value):
@@ -20,7 +22,7 @@ class AppSchema(Schema):
     @validates('info')
     def validate_info(self, value):
         # Ensure the info field has a minimum and maximum length
-        if len(value) < 10:
+        if len(value) < 5:
             raise ValidationError('Info must be at least 10 characters long')
         if len(value) > 200:
             raise ValidationError('Info must not exceed 200 characters')

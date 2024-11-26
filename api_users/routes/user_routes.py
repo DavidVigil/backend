@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, make_response
 from marshmallow import ValidationError
 from logger.logger_users import Logger
 from flasgger import swag_from
@@ -13,12 +13,129 @@ class UserRoutes(Blueprint):
 
     def register_routes(self):
         self.route('/api/v1/users', methods=['GET'])(self.get_users)
+        self.route("/api/v1/users", methods=["POST"])(self.add_user)
         self.route('/api/v1/users/login', methods=['GET'])(self.get_login_user)
-        self.route('/api/v1/users', methods=['POST'])(self.add_user)
+        self.route("/api/v1/users/like", methods=["GET"])(self.liked_apps)
+        self.route('/api/v1/users/like', methods=['POST'])(self.like_app)
         self.route('/api/v1/users/<int:user_id>', methods=['PUT'])(self.update_user)
         self.route('/api/v1/users/<int:user_id>', methods=['DELETE'])(self.delete_user)
         self.route('/api/v1/users/<int:user_id>', methods=['GET'])(self.get_user_by_id)
         self.route('/healthcheck', methods=['GET'])(self.healthcheck)
+
+    @swag_from({
+        'tags': ['Users'],
+        'parameters': [
+            {
+                '_id': 'user_id',
+            }   
+        ],
+        'responses': {
+            200: {
+                'description': 'List of liked apps'
+            },
+            401: {
+                'description': 'Invalid user or empty'
+            },
+            402: {
+                'description': 'Validation failed'
+            },
+            400: {
+                'description': 'User does not exist'
+            },
+            505: {
+                'description': 'Internal server error'
+            }
+        }
+    })
+    def liked_apps(self):
+        try:
+            # let's get the params data
+            user_id = int(request.args.get('user_id'))
+            if not user_id:
+                return jsonify({'error': 'Invalid user or empty'}), 401
+
+            try:
+                self.user_schema.validate_id(str(user_id))
+            except ValidationError as e:
+                return jsonify({'error': f'Validation failed: {e}'}), 402
+            
+            user = self.user_service.get_user_by_id(user_id)
+            if user is None:
+                return jsonify({'error': 'User does not exist'}), 400
+            
+            liked_apps = self.user_service.get_liked_apps(user_id)
+            user['likedApps'] = liked_apps
+
+            return jsonify(user['likedApps']), 201
+        except Exception as e:
+            self.logger.error(f'Error fetching liked apps: {e}')
+            return jsonify({'error': f'Error fetching liked apps: {e}'}), 505
+        
+    @swag_from({
+        'tags': ['Users'],
+        'parameters': [
+            {
+                'name': 'body',
+                'in': 'body',
+                'required': True,
+                'schema': {
+                    'type': 'object',
+                    'properties': {
+                        'user_id': {'type': 'integer'},
+                        'app_id': {'type': 'integer'}
+                    },
+                    'required': ['user_id', 'app_id']
+                }
+            }
+        ],
+        'responses': {
+            200: {
+                'description': 'App successfully liked'
+            },
+            401: {
+                'description': 'Invalid data, empty'
+            },
+            402: {
+                'description': 'Validation failed'
+            },
+            400: {
+                'description': 'User does not exist'
+            },
+            500: {
+                'description': 'Internal server error'
+            }
+        }
+    })
+    def like_app(self):
+        try:
+            request_data = request.json
+            if not request_data:
+                return jsonify({'error': 'Invalid data, empty'}), 401
+
+            user_id = int(request_data.get('user_id'))
+            app_id = int(request_data.get('app_id'))
+
+            try:
+                self.user_schema.validate_id(str(user_id))
+            except ValidationError as e:
+                return jsonify({'error': f'Validation failed: {e}'}), 402
+
+            try:
+                self.user_schema.validate_id(str(app_id))
+            except ValidationError as e:
+                return jsonify({'error': f'Validation failed: {e}'}), 403
+
+            user = self.user_service.like_app(user_id, app_id)
+            if user is None:
+                return jsonify({'error': 'User does not exist'}), 400
+            
+            if isinstance(user, str):
+                return jsonify({'message': 'Successfully saved app'}), 200
+
+            return make_response(user)
+        except Exception as e:
+            self.logger.error(f'Error liking app: {e}')
+            return jsonify({'error': f'Error liking app: {e}'}), 500
 
     @swag_from({
         'tags': ['Users'],
